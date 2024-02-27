@@ -1,0 +1,19 @@
+name: 'Initialize workflow'
+description: 'Gets the workflow environment ready.'
+inputs:
+  aws_role:
+    description: "The AWS role to assume"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: us-west-2
