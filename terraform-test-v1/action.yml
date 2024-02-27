@@ -20,4 +20,4 @@ runs:
       shell: bash
       run: |
         echo `terraform version`
-        ${{ github.action_path }}/ci_tests.sh ${{ github.repository }}
+        ./scripts/ci_tests.sh
