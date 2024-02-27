@@ -1,0 +1,22 @@
+on: workflow_call
+
+jobs:
+  prepare-release:  
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare release
+        shell: bash
+        run: |
+          echo "$GPG_SECRET_KEY" | base64 --decode | gpg --import --no-tty --batch --yes
+          scripts/release.sh prepare
+        env:
+          GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+
+
