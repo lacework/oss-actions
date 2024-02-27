@@ -40,6 +40,7 @@ integration_tests() {
 
 lint_tests() {
   log "terraform fmt check"
+  export TF_LOG="DEBUG"
   terraform fmt -check
 }
 
