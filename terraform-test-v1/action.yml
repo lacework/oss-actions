@@ -18,5 +18,4 @@ runs:
     - name: Test Terraform
       shell: bash
       run: |
-        echo ${{ github.repository }}
-        ${{ github.action_path }}/ci_tests.sh "${{ github.repository }}"
+        echo "`${{ github.action_path }}/ci_tests.sh ${{ github.repository }}`"
