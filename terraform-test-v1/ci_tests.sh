@@ -53,3 +53,5 @@ main() {
   integration_tests
   sec_tests
 }
+
+main "$@"
