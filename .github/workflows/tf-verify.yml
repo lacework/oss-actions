@@ -1,0 +1,15 @@
+on: workflow_call
+
+jobs:
+  verify-release:  
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify release
+        shell: bash
+        run: |
+          scripts/release.sh verify

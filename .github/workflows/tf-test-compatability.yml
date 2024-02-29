@@ -1,0 +1,75 @@
+on: workflow_call
+
+jobs:
+  get-versions:
+    runs-on: ubuntu-latest
+  outputs:
+    tfl3: ${ steps.tfl-3.outputs.tfl3 }
+  steps:
+    - name: Install tfenv
+      shell: bash
+      run: |
+        git clone --depth=1 https://github.com/tfutils/tfenv.git tfenv
+
+    - name: TerraformLatest-3
+      id: tfl-3
+      shell: bash
+      run: |
+        echo "tfl3=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p')" >> $GITHUB_OUTPUT
+
+  run-tests:
+    needs: get-versions
+    strategy:
+      matrix:
+        version: [${{ needs.get-versions.outputs.tfl3 }}]    
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::249446771485:role/tf-role-arc-generic
+          aws-region: us-west-2
+
+      - name: Install Lacework CLI
+        shell: bash
+        run: |
+          curl https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | bash
+          lacework version
+          jq -n \
+          --arg ac "$LW_ACCOUNT" \
+          --arg ke "$LW_API_KEY" \
+          --arg se "$LW_API_SECRET" \
+          --arg su "$LW_SUBACCOUNT" \
+          '{keyId: $ke, secret: $se, subAccount: $su, account: $ac}' > creds.json
+          lacework configure -j creds.json --noninteractive 
+        env:
+          LW_ACCOUNT: ${{ secrets.lw_account }}
+          LW_API_KEY: ${{ secrets.lw_api_key }}
+          LW_API_SECRET: ${{ secrets.lw_api_secret }}
+          LW_SUBACCOUNT: ${{ secrets.lw_subaccount }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ matrix.version }}
+          terraform_wrapper: false
+
+      - name: Install tfsec
+        shell: bash
+        run: |
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+          tfsec --version
+
+      - name: Test Terraform
+        shell: bash
+        run: |
+          terraform version
+          ./scripts/ci_tests.sh
+
+
+

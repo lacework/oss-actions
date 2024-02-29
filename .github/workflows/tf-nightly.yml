@@ -1,16 +1,4 @@
-on:
-  workflow_call:
-    secrets:
-      aws_role:
-        required: true
-      lw_account:
-        required: true
-      lw_api_key:
-        required: true
-      lw_api_secret:
-        required: true
-      lw_subaccount:
-        required: true
+on: workflow_call
 
 jobs:
   run-tests:
@@ -23,13 +11,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.aws_role }}
+          role-to-assume: arn:aws:iam::249446771485:role/tf-role-arc-generic
           aws-region: us-west-2
 
       - name: Install Lacework CLI
@@ -37,6 +23,18 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | bash
           lacework version
+          jq -n \
+          --arg ac "$LW_ACCOUNT" \
+          --arg ke "$LW_API_KEY" \
+          --arg se "$LW_API_SECRET" \
+          --arg su "$LW_SUBACCOUNT" \
+          '{keyId: $ke, secret: $se, subAccount: $su, account: $ac}' > creds.json
+          lacework configure -j creds.json --noninteractive 
+        env:
+          LW_ACCOUNT: ${{ secrets.lw_account }}
+          LW_API_KEY: ${{ secrets.lw_api_key }}
+          LW_API_SECRET: ${{ secrets.lw_api_secret }}
+          LW_SUBACCOUNT: ${{ secrets.lw_subaccount }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -44,15 +42,17 @@ jobs:
           terraform_version: ${{ matrix.version }}
           terraform_wrapper: false
 
+      - name: Install tfsec
+        shell: bash
+        run: |
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+          tfsec --version
+
       - name: Test Terraform
         shell: bash
         run: |
           terraform version
           ./scripts/ci_tests.sh
-        env:
-          LW_ACCOUNT: ${{ secrets.lw_account }}
-          LW_API_KEY: ${{ secrets.lw_api_key }}
-          LW_API_SECRET: ${{ secrets.lw_api_secret }}
-          LW_SUBACCOUNT: ${{ secrets.lw_subaccount }}
+
 
 
