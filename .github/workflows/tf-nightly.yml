@@ -1,10 +1,14 @@
-on: workflow_call
-
+on: 
+  workflow_call:
+    inputs:
+      tf-versions:
+        description: "List of Terraform versions to test"
+        default: '["1.0.0", "1.4", "1.5"]'
 jobs:
   run-tests:
     strategy:
       matrix:
-        version: [1.0.0, 1.4, 1.5]    
+        version: ${{ fromJSON(github.event.inputs.tf-versions) }}  
     runs-on: ubuntu-latest
     permissions:
       id-token: write
