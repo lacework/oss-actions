@@ -58,6 +58,12 @@ jobs:
         run: |
           terraform version
           ./scripts/ci_tests.sh
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.tf_arm_subscription_id }}
+          ARM_TENANT_ID: ${{ secrets.tf_arm_tenant_id }}
+          ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
+          ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
+          
 
 
 
