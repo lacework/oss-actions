@@ -63,7 +63,10 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.tf_arm_tenant_id }}
           ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
           ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
-          
+          GOOGLE_PROJECT: $${{ secrets.tf_google_project }}
+          GOOGLE_CREDENTIALS: ${{ secrets.tf_google_credentials }}
+          OCI_PRIVATE_KEY: ${{ secrets.tf_oci_private_key }}
+
 
 
 
