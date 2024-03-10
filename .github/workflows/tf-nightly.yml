@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           terraform version
-          echo $GOOGLE_CREDENTIALS >> gcloud.creds
+          echo $GOOGLE_CREDENTIALS_FILE >> gcloud.creds
           export GOOGLE_CREDENTIALS="$(pwd)/gcloud.creds"
           ./scripts/ci_tests.sh
         env:
@@ -66,7 +66,7 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
           ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
           GOOGLE_PROJECT: $${{ secrets.tf_google_project }}
-          GOOGLE_CREDENTIALS: ${{ secrets.tf_google_credentials }}
+          GOOGLE_CREDENTIALS_FILE: ${{ secrets.tf_google_credentials }}
           OCI_PRIVATE_KEY: ${{ secrets.tf_oci_private_key }}
           TF_VAR_tenancy_ocid: ${{ secrets.tf_oci_id }}
           TF_VAR_fingerprint: ${{ secrets.tf_oci_fingerprint }}
