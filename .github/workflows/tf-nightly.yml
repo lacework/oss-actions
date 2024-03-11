@@ -8,6 +8,7 @@ on:
 jobs:
   run-tests:
     strategy:
+      fail-fast: false
       matrix:
         version: ${{ fromJSON(inputs.tf-versions) }}  
     runs-on: ubuntu-latest
