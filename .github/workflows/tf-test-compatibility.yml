@@ -1,6 +1,13 @@
-on: workflow_call
-
+on: 
+  workflow_call:
+    inputs:
+      min-version:
+        type: string
+        description: "Minimum Terraform Version Supported by Module"
+        default: 1.0
 jobs:
+  # Construct a set of terraform version numbers to test against
+  # Do not add any versions less the the minumum version defined in the workflow input
   get-versions:
     runs-on: ubuntu-latest
     outputs:
@@ -11,13 +18,78 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/tfutils/tfenv.git tfenv
 
+      - name: Output Min Version to Logs
+        shell: bash
+        run: |
+            echo "Minimum version is ${{ inputs.min-version }}"
+
       - name: TerraformLatest-3
         id: tfl-3
         shell: bash
         run: |
-          echo "version=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p')" >> $GITHUB_OUTPUT
-    
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p')
+          echo $VERSION
+          if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
+            echo "Adding ${VERSION} to job matrix."
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Skipping ${VERSION}, it is too low for this module"
+          fi
+
+      - name: TerraformLatest-2
+        id: tfl-2
+        shell: bash
+        run: |
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '3p')
+          echo $VERSION
+          if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
+            echo "Adding ${VERSION} to job matrix."
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Skipping ${VERSION}, it is too low for this module"
+          fi
+
+      - name: TerraformLatest-1
+        id: tfl-1
+        shell: bash
+        run: |
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '2p')
+          echo $VERSION
+          if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
+            echo "Adding ${VERSION} to job matrix."
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Skipping ${VERSION}, it is too low for this module"
+          fi
+
+      - name: TerraformLatestMajor1
+        id: tflm-0
+        shell: bash
+        run: |
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '1p')
+          echo $VERSION
+          if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
+            echo "Adding ${VERSION} to job matrix."
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Skipping ${VERSION}, it is too low for this module"
+          fi
+
+      - name: TerraformLatest1
+        id: tflatest
+        shell: bash
+        run: |
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.[0-9]' | grep -v beta | grep -v alpha | head -1)
+          echo $VERSION
+          if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
+            echo "Adding ${VERSION} to job matrix."
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Skipping ${VERSION}, it is too low for this module"
+          fi
+
   run-tests:
+    # Test the module against the list of terraform versions constructed in the "get-versions" job
     needs: get-versions
     strategy:
       fail-fast: false
@@ -83,4 +155,25 @@ jobs:
           TF_VAR_fingerprint: ${{ secrets.tf_oci_fingerprint }}
           TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
           TF_VAR_region: ${{ secrets.tf_oci_region }}
+
+  trigger-release:
+    needs: [get-versions, run-tests]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        token: ${{ secrets.TF_TOKEN }}
+    
+    - name: Trigger release
+      shell: bash
+      run: |
+        echo "$GPG_SECRET_KEY" | base64 --decode | gpg --import --no-tty --batch --yes
+        scripts/release.sh trigger
+      env:
+        GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
+        GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        GITHUB_TOKEN: ${{ secrets.TF_TOKEN }}
+
 
