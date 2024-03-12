@@ -49,10 +49,10 @@ jobs:
           '{keyId: $ke, secret: $se, subAccount: $su, account: ($ac + ".lacework.net")}' > creds.json
           lacework configure -j creds.json --noninteractive 
         env:
-          LW_ACCOUNT: ${{ secrets.lw_account }}
-          LW_API_KEY: ${{ secrets.lw_api_key }}
-          LW_API_SECRET: ${{ secrets.lw_api_secret }}
-          LW_SUBACCOUNT: ${{ secrets.lw_subaccount }}
+          LW_ACCOUNT: ${{ secrets.tf_lw_account }}
+          LW_API_KEY: ${{ secrets.tf_lw_api_key }}
+          LW_API_SECRET: ${{ secrets.tf_lw_api_secret }}
+          LW_SUBACCOUNT: ${{ secrets.tf_lw_subaccount }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
