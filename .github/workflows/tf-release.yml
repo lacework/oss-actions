@@ -8,6 +8,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.TF_TOKEN }}
 
       - name: Prepare release
         shell: bash
@@ -16,4 +19,7 @@ jobs:
           scripts/release.sh publish
         env:
           GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          GITHUB_TOKEN: ${{ secrets.TF_TOKEN }}
+
+
