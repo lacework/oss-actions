@@ -1,17 +1,27 @@
+on: workflow_call
 
-on: 
-  workflow_call:
-    inputs:
-      tf-versions:
-        type: string
-        description: "List of Terraform versions to test"
-        default: '["1.0.0", "1.4", "1.5"]'
 jobs:
+  get-versions:
+    runs-on: ubuntu-latest
+  outputs:
+    tfl3: ${ steps.tfl-3.outputs.tfl3 }
+  steps:
+    - name: Install tfenv
+      shell: bash
+      run: |
+        git clone --depth=1 https://github.com/tfutils/tfenv.git tfenv
+
+    - name: TerraformLatest-3
+      id: tfl-3
+      shell: bash
+      run: |
+        echo "tfl3=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p')" >> $GITHUB_OUTPUT
+
   run-tests:
+    needs: get-versions
     strategy:
-      fail-fast: false
       matrix:
-        version: ${{ fromJSON(inputs.tf-versions) }}  
+        version: [${{ needs.get-versions.outputs.tfl3 }}]    
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -35,13 +45,13 @@ jobs:
           --arg ke "$LW_API_KEY" \
           --arg se "$LW_API_SECRET" \
           --arg su "$LW_SUBACCOUNT" \
-          '{keyId: $ke, secret: $se, subAccount: $su, account: ($ac + ".lacework.net")}' > creds.json
+          '{keyId: $ke, secret: $se, subAccount: $su, account: $ac}' > creds.json
           lacework configure -j creds.json --noninteractive 
         env:
-          LW_ACCOUNT: ${{ secrets.tf_lw_account }}
-          LW_API_KEY: ${{ secrets.tf_lw_api_key }}
-          LW_API_SECRET: ${{ secrets.tf_lw_api_secret }}
-          LW_SUBACCOUNT: ${{ secrets.tf_lw_subaccount }}
+          LW_ACCOUNT: ${{ secrets.lw_account }}
+          LW_API_KEY: ${{ secrets.lw_api_key }}
+          LW_API_SECRET: ${{ secrets.lw_api_secret }}
+          LW_SUBACCOUNT: ${{ secrets.lw_subaccount }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -60,20 +70,6 @@ jobs:
         run: |
           terraform version
           ./scripts/ci_tests.sh
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.tf_arm_subscription_id }}
-          ARM_TENANT_ID: ${{ secrets.tf_arm_tenant_id }}
-          ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
-          ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
-          GOOGLE_PROJECT: ${{ secrets.tf_google_project }}
-          GOOGLE_CREDENTIALS: ${{ secrets.tf_google_credentials }}
-          OCI_PRIVATE_KEY: ${{ secrets.tf_oci_private_key }}
-          TF_VAR_tenancy_ocid: ${{ secrets.tf_oci_id }}
-          TF_VAR_fingerprint: ${{ secrets.tf_oci_fingerprint }}
-          TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
-          TF_VAR_region: ${{ secrets.tf_oci_region }}
-
-
 
 
 
