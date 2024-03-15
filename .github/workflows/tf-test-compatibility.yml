@@ -5,6 +5,11 @@ on:
         type: string
         description: "Minimum Terraform Version Supported by Module"
         default: 1.0
+      trigger-release:
+        type: boolean
+        description: "Whether or not to trigger a release"
+        default: boolean
+
 jobs:
   # Construct a set of terraform version numbers to test against
   # Do not add any versions less the the minumum version defined in the workflow input
@@ -157,7 +162,7 @@ jobs:
           TF_VAR_region: ${{ secrets.tf_oci_region }}
 
   trigger-release:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' &&  inputs.trigger-release }}
     needs: [get-versions, run-tests]
     runs-on: ubuntu-latest
     steps:
