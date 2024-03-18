@@ -8,7 +8,7 @@ on:
       trigger-release:
         type: boolean
         description: "Whether or not to trigger a release"
-        default: boolean
+        default: false
 
 jobs:
   # Construct a set of terraform version numbers to test against
