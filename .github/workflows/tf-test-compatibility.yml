@@ -5,10 +5,6 @@ on:
         type: string
         description: "Minimum Terraform Version Supported by Module"
         default: 1.0
-      trigger-release:
-        type: boolean
-        description: "Whether or not to trigger a release"
-        default: false
 
 jobs:
   # Construct a set of terraform version numbers to test against
@@ -162,14 +158,13 @@ jobs:
           TF_VAR_region: ${{ secrets.tf_oci_region }}
 
   trigger-release:
-    if: ${{ inputs.trigger-release }}
+    if: github.ref == 'refs/heads/main'
     needs: [get-versions, run-tests]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        ref: main
         token: ${{ secrets.TF_TOKEN }}
     
     - name: Trigger release
@@ -182,4 +177,33 @@ jobs:
         GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
         GITHUB_TOKEN: ${{ secrets.TF_TOKEN }}
 
-
+  slack-notify:
+    name: Slack Notify if Failed Tests
+    needs: [get-versions, run-tests, trigger-release]
+    runs-on: ubuntu-latest
+    if: needs.get-versions.result == 'failure' || needs.run-tests.result == 'failure' || needs.trigger-release.result == 'failure'
+    steps:
+      - name: Notify Slack on Failure
+        uses: slackapi/slack-github-action@v1.25.0
+        if: failure()
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#E92020",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "@oncall-growth-eng! There has been a failure that needs your attention. :rotating_light:\n*GitHub Workflow Failure <${{ github.server_url }}/${{ github.repository }}>*\n\n*Workflow Run*\n <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_GROWTH_ENG_ALERTS }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
