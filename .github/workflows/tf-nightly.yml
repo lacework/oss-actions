@@ -73,7 +73,36 @@ jobs:
           TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
           TF_VAR_region: ${{ secrets.tf_oci_region }}
 
-
+  slack-notify:
+    name: Slack Notify if Failed Tests
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: needs.run-tests.result == 'failure'
+    steps:
+      - name: Notify Slack on Failure
+        uses: slackapi/slack-github-action@v1.25.0
+        if: failure()
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#E92020",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "@oncall-growth-eng! There has been a failure that needs your attention. :rotating_light:\n*GitHub Workflow Failure <${{ github.server_url }}/${{ github.repository }}>*\n\n*Workflow Run*\n <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_GROWTH_ENG_ALERTS }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
 
 
