@@ -181,9 +181,10 @@ jobs:
     name: Slack Notify if Failed Tests
     needs: [get-versions, run-tests, trigger-release]
     runs-on: ubuntu-latest
-    if: needs.get-versions.result == 'failure' || needs.run-tests.result == 'failure' || needs.trigger-release.result == 'failure'
+    if: always()
     steps:
       - name: Notify Slack on Failure
+        if: ${{ contains(needs.*.result, 'failure') }}
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
