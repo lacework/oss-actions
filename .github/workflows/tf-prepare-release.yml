@@ -11,7 +11,30 @@ jobs:
         with:
           token: ${{ secrets.TF_TOKEN }}
 
-
+      - name: Notify Slack of Release
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#E92020",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": Preparing release for Terraform Module: ${{ github.repository }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.TF_SLACK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          
       - name: Prepare release
         shell: bash
         run: |
