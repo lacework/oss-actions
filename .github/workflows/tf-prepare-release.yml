@@ -26,11 +26,11 @@ jobs:
     name: Slack Notify if Failed Tests
     needs: prepare-release
     runs-on: ubuntu-latest
-    if: needs.prepare-release.result == 'failure'
+    if: always()
     steps:
       - name: Notify Slack on Failure
+        if: ${{ contains(needs.*.result, 'failure') }}
         uses: slackapi/slack-github-action@v1.25.0
-        if: failure()
         with:
           payload: |
             {
@@ -50,5 +50,5 @@ jobs:
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_GROWTH_ENG_ALERTS }}
+          SLACK_WEBHOOK_URL: ${{ secrets.TF_SLACK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
