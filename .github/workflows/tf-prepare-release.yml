@@ -10,6 +10,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.TF_TOKEN }}
+          fetch-depth: 0
+          ref: main
 
       - name: Notify Slack of Release
         uses: slackapi/slack-github-action@v1.25.0
