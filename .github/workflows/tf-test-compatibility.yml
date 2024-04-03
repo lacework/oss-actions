@@ -80,7 +80,7 @@ jobs:
         id: tflatest
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.[0-9]' | grep -v beta | grep -v alpha | head -1)
+          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.[0-9]' | grep -v beta | grep -v alpha | grep -v rc| head -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
