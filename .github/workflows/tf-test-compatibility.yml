@@ -120,7 +120,10 @@ jobs:
           --arg se "$LW_API_SECRET" \
           --arg su "$LW_SUBACCOUNT" \
           '{keyId: $ke, secret: $se, subAccount: $su, account: ($ac + ".lacework.net")}' > creds.json
-          lacework configure -j creds.json --noninteractive 
+          lacework configure -j creds.json --noninteractive
+          lacework configure -p main-account -j creds.json --noninteractive
+          lacework configure -p sub-account-1 -j creds.json --noninteractive
+          lacework configure -p sub-account-2 -j creds.json --noninteractive
         env:
           LW_ACCOUNT: ${{ secrets.tf_lw_account }}
           LW_API_KEY: ${{ secrets.tf_lw_api_key }}
