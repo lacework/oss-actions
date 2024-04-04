@@ -60,6 +60,8 @@ jobs:
       - name: Test Terraform
         shell: bash
         run: |
+          ls ~/.aws
+          cat ~/.aws/credentials
           terraform version
           ./scripts/ci_tests.sh
         env:
