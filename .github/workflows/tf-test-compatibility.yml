@@ -107,12 +107,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials using OIDC
         if: ${{ ! inputs.use-custom-aws-creds }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::249446771485:role/tf-role-arc-generic
           aws-region: us-west-2
+
+      - name: Configure AWS Credentials using repo secrets
+        if: ${{ inputs.use-custom-aws-creds }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Install Lacework CLI
         shell: bash
@@ -147,32 +155,8 @@ jobs:
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
           tfsec --version
 
-      - name: Test Terraform with custom AWS creds
-        if: ${{ inputs.use-custom-aws-creds }}
-        shell: bash
-        run: |
-          terraform version
-          ./scripts/ci_tests.sh
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.tf_arm_subscription_id }}
-          ARM_TENANT_ID: ${{ secrets.tf_arm_tenant_id }}
-          ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
-          ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
-          GOOGLE_PROJECT: ${{ secrets.tf_google_project }}
-          GOOGLE_CREDENTIALS: ${{ secrets.tf_google_credentials }}
-          OCI_PRIVATE_KEY: ${{ secrets.tf_oci_private_key }}
-          TF_VAR_tenancy_ocid: ${{ secrets.tf_oci_id }}
-          TF_VAR_fingerprint: ${{ secrets.tf_oci_fingerprint }}
-          TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
-          TF_VAR_region: ${{ secrets.tf_oci_region }}
-          TF_VAR_organization_id: ${{ secrets.gcloud_org_id }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
-          AWS_REGION: ${{ secrets.aws_region }}
+      - name: Test Terraform
 
-
-      - name: Test Terraform with standard AWS creds
-        if: ${{ ! inputs.use-custom-aws-creds }}
         shell: bash
         run: |
           terraform version
