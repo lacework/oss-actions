@@ -67,6 +67,7 @@ jobs:
         if: ${{ inputs.use-custom-aws-creds }}
         shell: bash
         run: |
+          unset AWS_SESSION_TOKEN
           terraform version
           ./scripts/ci_tests.sh
         env:
