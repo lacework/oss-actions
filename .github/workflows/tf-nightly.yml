@@ -68,7 +68,7 @@ jobs:
           fi
 
       - name: Test Terraform with custom AWS creds
-        if: ${{ steps.aws-cred-check.outputs.awscreds != 'true' }}
+        if: ${{ steps.aws-cred-check.outputs.awscreds == 'true' }}
         shell: bash
         run: |
           terraform version
@@ -91,7 +91,7 @@ jobs:
           AWS_REGION: ${{ secrets.aws_region }}
 
       - name: Test Terraform with standard AWS creds
-        if: ${{ steps.aws-cred-check.outputs.awscreds != 'false' }}
+        if: ${{ steps.aws-cred-check.outputs.awscreds == 'false' }}
         shell: bash
         run: |
           terraform version
