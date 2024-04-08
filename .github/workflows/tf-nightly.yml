@@ -57,7 +57,18 @@ jobs:
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
           tfsec --version
 
-      - name: Test Terraform
+      - name: Detect AWS Creds
+        id: aws-cred-check
+        shell: bash
+        run: |
+          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" != '' ] && [ "${{ secrets.AWS_SECRET_ACCESS_KEY }}" != '' ]; then
+            echo "awscreds=true" >> $GITHUB_OUTPUT;
+          else
+            echo "awscreds=false" >> $GITHUB_OUTPUT;
+          fi
+
+      - name: Test Terraform with custom AWS creds
+        if: ${{ steps.aws-cred-check.outputs.awscreds != 'true' }}
         shell: bash
         run: |
           terraform version
@@ -75,6 +86,30 @@ jobs:
           TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
           TF_VAR_region: ${{ secrets.tf_oci_region }}
           TF_VAR_organization_id: ${{ secrets.gcloud_org_id }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+          AWS_REGION: ${{ secrets.aws_region }}
+
+      - name: Test Terraform with standard AWS creds
+        if: ${{ steps.aws-cred-check.outputs.awscreds != 'false' }}
+        shell: bash
+        run: |
+          terraform version
+          ./scripts/ci_tests.sh
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.tf_arm_subscription_id }}
+          ARM_TENANT_ID: ${{ secrets.tf_arm_tenant_id }}
+          ARM_CLIENT_ID: ${{ secrets.tf_arm_client_id }}
+          ARM_CLIENT_SECRET: ${{ secrets.tf_arm_client_secret }}
+          GOOGLE_PROJECT: ${{ secrets.tf_google_project }}
+          GOOGLE_CREDENTIALS: ${{ secrets.tf_google_credentials }}
+          OCI_PRIVATE_KEY: ${{ secrets.tf_oci_private_key }}
+          TF_VAR_tenancy_ocid: ${{ secrets.tf_oci_id }}
+          TF_VAR_fingerprint: ${{ secrets.tf_oci_fingerprint }}
+          TF_VAR_user_ocid: ${{ secrets.tf_oci_user }}
+          TF_VAR_region: ${{ secrets.tf_oci_region }}
+          TF_VAR_organization_id: ${{ secrets.gcloud_org_id }}
+
 
 
   slack-notify:
