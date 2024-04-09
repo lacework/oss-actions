@@ -5,6 +5,10 @@ on:
         type: string
         description: "Minimum Terraform Version Supported by Module"
         default: 1.0
+      use-custom-aws-creds:
+        type: boolean
+        description: "Whether to use aws creds in secrets"
+        default: false
 
 jobs:
   # Construct a set of terraform version numbers to test against
@@ -103,11 +107,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials using OIDC
+        if: ${{ ! inputs.use-custom-aws-creds }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::249446771485:role/tf-role-arc-generic
           aws-region: us-west-2
+
+      - name: Configure AWS Credentials using repo secrets
+        if: ${{ inputs.use-custom-aws-creds }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
 
       - name: Install Lacework CLI
         shell: bash
@@ -143,6 +157,7 @@ jobs:
           tfsec --version
 
       - name: Test Terraform
+
         shell: bash
         run: |
           terraform version
