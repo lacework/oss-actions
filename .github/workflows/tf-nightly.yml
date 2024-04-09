@@ -73,7 +73,6 @@ jobs:
           tfsec --version
 
       - name: Test Terraform
-        if: ${{ ! inputs.use-custom-aws-creds }}
         shell: bash
         run: |
           terraform version
