@@ -32,7 +32,8 @@ jobs:
         id: tfl-3
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p')
+          MINOR=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '4p' | sed -E 's/\.0$//')
+          VERSION=$(tfenv/bin/tfenv list-remote | grep -E "^${MINOR}\.[0-9]+$" | sort -V | tail -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
@@ -45,7 +46,8 @@ jobs:
         id: tfl-2
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '3p')
+          MINOR=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '3p' | sed -E 's/\.0$//')
+          VERSION=$(tfenv/bin/tfenv list-remote | grep -E "^${MINOR}\.[0-9]+$" | sort -V | tail -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
@@ -58,7 +60,8 @@ jobs:
         id: tfl-1
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '2p')
+          MINOR=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '2p' | sed -E 's/\.0$//')
+          VERSION=$(tfenv/bin/tfenv list-remote | grep -E "^${MINOR}\.[0-9]+$" | sort -V | tail -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
@@ -71,7 +74,8 @@ jobs:
         id: tflm-0
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '1p')
+          MINOR=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.0$' | sed -n '1p' | sed -E 's/\.0$//')
+          VERSION=$(tfenv/bin/tfenv list-remote | grep -E "^${MINOR}\.[0-9]+$" | sort -V | tail -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
@@ -84,7 +88,7 @@ jobs:
         id: tflatest
         shell: bash
         run: |
-          VERSION=$(tfenv/bin/tfenv list-remote | grep '1\.[0-9]\.[0-9]' | grep -v beta | grep -v alpha | grep -v rc| head -1)
+          VERSION=$(tfenv/bin/tfenv list-remote | grep -E '^1\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
           echo $VERSION
           if [ "${{inputs.min-version}}" = "`echo -e "${{inputs.min-version}}\n${VERSION}" | sort -V | head -n1`" ]; then
             echo "Adding ${VERSION} to job matrix."
